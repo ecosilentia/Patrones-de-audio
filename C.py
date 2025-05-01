@@ -28,11 +28,11 @@ st.title("🎧 Identificación de patrones sonoros con Espectrogramas")
 # Sidebar
 st.sidebar.header("Configuración")
 n_fft = st.sidebar.selectbox("Tamaño de ventana (n_fft)", [1024, 2046, 4096], index=2)
-n_clusters = st.sidebar.slider("Cantidad de Clusters", 1, 4, 3)
+n_clusters = st.sidebar.slider("Cantidad de Clusters", 1, 5, 3)
 ejemplos_por_cluster = st.sidebar.radio("Ejemplos por Cluster", [1, 2])
 lowcut = 100
 highcut = 20000
-duracion_fragmento = 10  # segundos
+duracion_fragmento = 4  # segundos
 sr = 44100
 
 # Cargar audio
