@@ -32,7 +32,7 @@ n_clusters = st.sidebar.slider("Cantidad de Clusters", 1, 5, 3)
 ejemplos_por_cluster = st.sidebar.radio("Ejemplos por Cluster", [1, 2])
 lowcut = 100
 highcut = 20000
-duracion_fragmento = 4  # segundos
+duracion_fragmento = 15  # segundos
 sr = 44100
 
 # Cargar audio
