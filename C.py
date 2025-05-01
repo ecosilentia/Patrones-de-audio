@@ -1,63 +1,19 @@
-import streamlit as st
-import librosa
-import librosa.display
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
-from scipy.signal import butter, lfilter
-import io
-
-# Funciones
-def butter_bandpass(lowcut, highcut, fs, order=5):
-    nyq = 0.5 * fs
-    low = lowcut / nyq
-    high = highcut / nyq
-    b, a = butter(order, [low, high], btype='band')
-    return b, a
-
-def bandpass_filter(data, lowcut, highcut, fs, order=5):
-    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
-    y = lfilter(b, a, data)
-    return y
-
-# Título
-st.title("🎧 Identificación de patrones sonoros con Espectrogramas")
-
-# Sidebar
-st.sidebar.header("Configuración")
-n_fft = st.sidebar.selectbox("Tamaño de ventana (n_fft)", [1024, 2046, 4096], index=2)
-n_clusters = st.sidebar.slider("Cantidad de Clusters", 1, 5, 3)
-ejemplos_por_cluster = st.sidebar.radio("Ejemplos por Cluster", [1, 2])
-lowcut = 100
-highcut = 20000
-duracion_fragmento = 15  # segundos
-sr = 44100
-
-# Cargar audio
-archivo_audio = st.file_uploader("Sube tu archivo WAV", type=["wav"])
-
-if archivo_audio:
-    audio, sr_actual = librosa.load(archivo_audio, sr=sr)
-    if len(audio) > sr * 60:
-        audio = audio[:sr * 60]  # Recorta a 1 minuto
-        st.warning("Audio recortado a 60 segundos.")
-    else:
-        st.info("Audio cargado completamente (menos de 1 minuto).")
+# ... (todo igual arriba)
 
     # Botón para ejecutar
     if st.button("▶️ RUN"):
         # Preprocesamiento
         audio_filtrado = bandpass_filter(audio, lowcut, highcut, sr)
-        num_muestras = duracion_fragmento * sr
+        num_muestras = 8 * sr
         trozos = []
         trozos_audio = []
+        posiciones = []  # Para saber en qué parte del audio va cada fragmento
 
         for i in range(0, len(audio_filtrado), num_muestras):
             fragmento = audio_filtrado[i:i + num_muestras]
             if len(fragmento) == num_muestras:
                 trozos_audio.append(fragmento)
+                posiciones.append(i)  # posición inicial del fragmento
                 mfcc = librosa.feature.mfcc(y=fragmento, sr=sr, n_mfcc=20)
                 delta = librosa.feature.delta(mfcc)
                 features = np.vstack([mfcc, delta])
@@ -77,7 +33,7 @@ if archivo_audio:
             kmeans = KMeans(n_clusters=n_clusters, random_state=42)
             clusters = kmeans.fit_predict(X_reducido)
 
-            # Plot clusters
+            # Mostrar clustering
             fig1, ax1 = plt.subplots(figsize=(7, 6))
             colors = plt.cm.viridis(np.linspace(0.3, 1, n_clusters))
             for i in range(n_clusters):
@@ -89,24 +45,37 @@ if archivo_audio:
             ax1.legend()
             st.pyplot(fig1)
 
-            # Espectrogramas
-            st.subheader("Espectrogramas por Cluster")
+            # Mostrar espectrograma completo del audio filtrado
+            st.subheader("🎛️ Espectrograma completo del audio filtrado")
+            S_full = librosa.stft(audio_filtrado, n_fft=n_fft, hop_length=256)
+            S_db_full = librosa.amplitude_to_db(np.abs(S_full), ref=np.max)
+            fig_full, ax_full = plt.subplots(figsize=(10, 4))
+            img = librosa.display.specshow(S_db_full, sr=sr, hop_length=256, x_axis='time', y_axis='hz', ax=ax_full)
+            ax_full.set_title("Espectrograma completo")
+            ax_full.set_ylim(100, 20000)
+            plt.colorbar(img, ax=ax_full, format="%+2.f dB")
+            st.pyplot(fig_full)
+
+            # Espectrogramas por cluster
+            st.subheader("🔎 Espectrogramas por Cluster")
             for cluster_id in range(n_clusters):
                 st.markdown(f"**Cluster {cluster_id}**")
                 idx = np.where(clusters == cluster_id)[0][:ejemplos_por_cluster]
                 for j, i in enumerate(idx):
-                    S = librosa.stft(trozos_audio[i], n_fft=n_fft, hop_length=256)
+                    fragmento = trozos_audio[i]
+                    S = librosa.stft(fragmento, n_fft=n_fft, hop_length=256)
                     S_db = librosa.amplitude_to_db(np.abs(S), ref=np.max)
 
                     fig2, ax2 = plt.subplots(figsize=(6, 3))
                     img = librosa.display.specshow(S_db, sr=sr, hop_length=256,
                                                    x_axis='time', y_axis='hz', ax=ax2)
-                    ax2.set_title(f"Cluster {cluster_id} - Ejemplo {j+1}")
+                    tiempo_inicio = posiciones[i] / sr
+                    ax2.set_title(f"Cluster {cluster_id} - Ejemplo {j+1} (desde {tiempo_inicio:.1f} s)")
                     ax2.set_ylim(100, 20000)
                     plt.colorbar(img, ax=ax2, format="%+2.f dB")
                     st.pyplot(fig2)
 
-                    # Botón para descargar imagen
+                    # Botón de descarga
                     buf = io.BytesIO()
                     fig2.savefig(buf, format="png")
                     st.download_button(
