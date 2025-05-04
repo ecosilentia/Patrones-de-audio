@@ -1,1 +1,7 @@
+[theme]
+primaryColor = "#4AB1F1"              # Botones e íconos: celeste fuerte
+backgroundColor = "#EAF6FB"           # Fondo claro
+secondaryBackgroundColor = "#D4EDF7"  # Panel lateral y secciones
+textColor = "#003B5C"                 # Texto azul oscuro
+font = "sans serif"                   # Fuente legible
 
