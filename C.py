@@ -31,8 +31,8 @@ n_fft = st.sidebar.selectbox("Tamaño de ventana (n_fft)", [1024, 2046, 4096], i
 n_clusters = st.sidebar.slider("Cantidad de Clusters", 1, 5, 3)
 ejemplos_por_cluster = st.sidebar.radio("Ejemplos por Cluster", [1, 2])
 lowcut = 60
-highcut = 15000
-duracion_fragmento = 10  # segundos (MODIFICADO AQUÍ)
+highcut = 12000
+duracion_fragmento = 10  # segundos
 sr = 44100
 
 # Cargar audio
@@ -68,7 +68,7 @@ if archivo_audio:
         if len(trozos) == 0:
             st.error("No se generaron fragmentos. Verifica el archivo.")
         else:
-            # Clustering
+            # Clustering (sin mostrar gráfico)
             X = np.array(trozos)
             scaler = StandardScaler()
             X_scaled = scaler.fit_transform(X)
@@ -77,19 +77,7 @@ if archivo_audio:
             kmeans = KMeans(n_clusters=n_clusters, random_state=42)
             clusters = kmeans.fit_predict(X_reducido)
 
-            # Plot clusters
-            fig1, ax1 = plt.subplots(figsize=(7, 6))
-            colors = plt.cm.viridis(np.linspace(0.3, 1, n_clusters))
-            for i in range(n_clusters):
-                puntos = X_reducido[clusters == i]
-                ax1.scatter(puntos[:, 0], puntos[:, 1], color=colors[i], label=f"Cluster {i}", s=50, alpha=0.6)
-            ax1.set_title("Clustering de Fragmentos")
-            ax1.set_xlabel("PCA 1")
-            ax1.set_ylabel("PCA 2")
-            ax1.legend()
-            st.pyplot(fig1)
-
-            # Espectrogramas
+            # Mostrar solo espectrogramas por cluster
             st.subheader("Espectrogramas por Cluster")
             for cluster_id in range(n_clusters):
                 st.markdown(f"**Cluster {cluster_id}**")
@@ -102,7 +90,7 @@ if archivo_audio:
                     img = librosa.display.specshow(S_db, sr=sr, hop_length=256,
                                                    x_axis='time', y_axis='hz', ax=ax2)
                     ax2.set_title(f"Cluster {cluster_id} - Ejemplo {j+1}")
-                    ax2.set_ylim(60, 15000)
+                    ax2.set_ylim(60, 12000)
                     plt.colorbar(img, ax=ax2, format="%+2.f dB")
                     st.pyplot(fig2)
 
@@ -116,3 +104,4 @@ if archivo_audio:
                         mime="image/png"
                     )
                     plt.close(fig2)
+
