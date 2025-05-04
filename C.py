@@ -31,7 +31,7 @@ n_fft = st.sidebar.selectbox("Tamaño de ventana (n_fft)", [1024, 2046, 4096], i
 n_clusters = st.sidebar.slider("Cantidad de Clusters", 1, 5, 3)
 ejemplos_por_cluster = st.sidebar.radio("Ejemplos por Cluster", [1, 2])
 lowcut = 30
-highcut = 12000
+highcut = 10000
 duracion_fragmento = 8  # segundos
 sr = 44100
 
@@ -90,7 +90,7 @@ if archivo_audio:
                     img = librosa.display.specshow(S_db, sr=sr, hop_length=256,
                                                    x_axis='time', y_axis='hz', ax=ax2, cmap="Blues")
                     ax2.set_title(f"Cluster {cluster_id} - Ejemplo {j+1}")
-                    ax2.set_ylim(30, 12000)
+                    ax2.set_ylim(30, 10000)
                     plt.colorbar(img, ax=ax2, format="%+2.f dB")
                     st.pyplot(fig2)
 
