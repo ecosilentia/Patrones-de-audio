@@ -88,7 +88,7 @@ if archivo_audio:
 
                     fig2, ax2 = plt.subplots(figsize=(6, 3))
                     img = librosa.display.specshow(S_db, sr=sr, hop_length=256,
-                                                   x_axis='time', y_axis='hz', ax=ax2, cmap="cool")
+                                                   x_axis='time', y_axis='hz', ax=ax2, cmap="viridis")
                     ax2.set_title(f"Cluster {cluster_id} - Ejemplo {j+1}")
                     ax2.set_ylim(30, 12000)
                     plt.colorbar(img, ax=ax2, format="%+2.f dB")
